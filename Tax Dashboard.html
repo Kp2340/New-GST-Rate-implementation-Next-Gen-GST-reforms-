@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive Sector Analysis Dashboard</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* NEW THEME: Deep Blue/Teal/Cyan Palette - ENHANCED FOR CREATIVITY */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #041221; /* Very dark navy base */
+            background-image: radial-gradient(at 0% 0%, #1e3a8a30 0px, transparent 50%), radial-gradient(at 100% 100%, #14b8a630 0px, transparent 50%); 
+            color: #F8FAFC; 
+            transition: background-color 0.5s ease;
+        }
+        .dashboard-content-panel {
+            min-height: 70vh;
+            transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+            opacity: 0;
+            transform: translateY(10px);
+            display: none;
+        }
+        .dashboard-content-panel.active {
+            opacity: 1;
+            transform: translateY(0);
+            display: block;
+        }
+        /* Card styles - Card Background changed to Slate 800 */
+        .card {
+            background-color: #1E293B; /* Slate 800 */
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.4); /* Deeper shadow for elevation */
+            transition: box-shadow 0.3s;
+        }
+        /* Title Glow Effect */
+        .title-glow {
+            text-shadow: 0 0 10px rgba(6, 182, 212, 0.7);
+        }
+
+        /* --- CREATIVE ENHANCEMENT 1: Dynamic Hover Effects --- */
+        .card:hover {
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.2); /* Subtle card highlight */
+        }
+        .product-tile {
+            cursor: pointer;
+            transition: all 0.2s ease-in-out, box-shadow 0.3s;
+            border: 1px solid transparent;
+            user-select: none;
+        }
+        .product-tile:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 15px rgba(20, 184, 166, 0.6); /* Teal pulse glow */
+            border-color: #14B8A6;
+        }
+        .product-tile.selected {
+            border: 2px solid #06B6D4; /* Cyan 500 */
+            background-color: #2F496B; 
+            box-shadow: 0 0 25px rgba(6, 182, 212, 0.8); /* Stronger glow for selection */
+        }
+        
+        /* Chart container height: Fixed for Overview, Flexible for Sector Detail */
+        .chart-container {
+            position: relative;
+            height: 300px; 
+            background-color: #101726; /* Slightly darker chart background */
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.6); /* Inner shadow for depth */
+        }
+        .chart-container-flex {
+            position: relative;
+            flex-grow: 1;
+            min-height: 250px;
+            background-color: #101726;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.6);
+        }
+        
+        /* --- CREATIVE ENHANCEMENT 3: Modal Flash/Blink Effect --- */
+        @keyframes flash-highlight {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        .flash-new-tax {
+            animation: flash-highlight 1.5s ease-in-out infinite;
+        }
+
+        /* Modal Animation */
+        #detail-modal .bg-slate-800 {
+            max-width: 90%;
+            overflow-x: hidden; 
+        }
+        .modal-animate {
+            animation: modal-open 0.4s ease-out forwards;
+            opacity: 0;
+            transform: scale(0.95); /* Adjusted zoom for smoothness */
+        }
+        @keyframes modal-open {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Header & Navigation -->
+        <header class="mb-8 card p-6 rounded-xl border-t-4 border-cyan-500">
+            <h1 class="text-4xl font-extrabold mb-2 text-cyan-400 title-glow">Sectoral Tax Impact Dashboard</h1>
+            <p class="text-lg text-gray-400">Interactive analysis of tax structures across key economic and social sectors.</p>
+            
+            <!-- Navigation Tabs -->
+            <div id="main-nav" class="flex flex-wrap gap-2 mt-6">
+                <!-- Buttons will be injected here by JS -->
+            </div>
+        </header>
+
+        <!-- Acknowledgment (Always visible on top of content area) -->
+        <div id="acknowledgment" class="mb-6 p-4 bg-slate-800 text-sm rounded-lg text-center font-medium text-gray-300">
+             This work was created in a creative and professional manner by **Rudrank** and **Hardik**, students of B.Com(H) at IITM.
+        </div>
+        
+        <!-- ========================================================================= -->
+        <!-- 1. OVERVIEW SECTION -->
+        <!-- ========================================================================= -->
+        <div id="Overview" class="dashboard-content-panel active grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 card p-6 rounded-xl">
+                <h2 class="text-2xl font-bold mb-4 text-cyan-400">Sectoral Trend Analysis</h2>
+                <div class="text-gray-400 mb-6">
+                    <p class="mb-2" id="overview-description"></p>
+                    <p class="text-xs text-gray-500 italic">The trend graph visualizes hypothetical growth in government revenue (in Lakhs of Rupees) from these sectors over a 5-year period under the new/simulated tax regimes.</p>
+                </div>
+                
+                <!-- Summary Cards Layout -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-cyan-900/50 p-4 rounded-lg border border-cyan-700/50">
+                        <h3 class="text-sm font-semibold text-cyan-300">Education Summary</h3>
+                        <p class="text-xs text-gray-300 mt-1" id="summary-education"></p>
+                    </div>
+                    <div class="bg-teal-900/50 p-4 rounded-lg border border-teal-700/50">
+                        <h3 class="text-sm font-semibold text-teal-300">Health Summary</h3>
+                        <p class="text-xs text-gray-300 mt-1" id="summary-health"></p>
+                    </div>
+                    <div class="bg-red-900/50 p-4 rounded-lg border border-red-700/50">
+                        <h3 class="text-sm font-semibold text-red-300">Sin Goods Summary</h3>
+                        <p class="text-xs text-gray-300 mt-1" id="summary-sin-goods"></p>
+                    </div>
+                    <div class="bg-blue-900/50 p-4 rounded-lg border border-blue-700/50">
+                        <h3 class="text-sm font-semibold text-blue-300">Automobile Tax Summary</h3>
+                        <p class="text-xs text-gray-300 mt-1" id="summary-automobile-tax"></p>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="overviewLineChart"></canvas>
+                </div>
+            </div>
+
+            <div class="lg:col-span-1 card p-6 rounded-xl">
+                <h2 class="text-2xl font-bold mb-4 text-cyan-400">Numeric Data Representation</h2>
+                <ul id="numeric-trends" class="space-y-4">
+                    <!-- Numeric trend data list will be injected here -->
+                </ul>
+            </div>
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- 2, 3, 4, 5. SECTOR DETAIL SECTIONS (Dynamic Content Loader) -->
+        <!-- ========================================================================= -->
+        <div id="SectoralDetail" class="dashboard-content-panel grid grid-cols-1 lg:grid-cols-4 gap-6">
+            
+            <!-- Left Panel: Product Selection (1 col) -->
+            <div class="lg:col-span-1 card p-6 rounded-xl">
+                <h2 class="text-xl font-bold mb-4 text-cyan-400" id="sector-title-selection"></h2>
+                <div id="product-list-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-1 gap-3">
+                    <!-- Product tiles will be injected here by JS -->
+                </div>
+            </div>
+
+            <!-- Right Panel: Sector Trend Analysis Chart + Instructions (3 cols) -->
+            <div id="sector-detail-right-panel" class="lg:col-span-3 card p-6 rounded-xl flex flex-col">
+                
+                <!-- Thematic Motto -->
+                <div id="sector-motto" class="text-lg italic text-teal-400 mb-4 p-3 bg-slate-700/50 rounded-lg border-l-4 border-teal-500">
+                    <!-- Motto will be injected here -->
+                </div>
+                
+                <h2 class="text-xl font-bold mb-2 text-cyan-400">Sectoral Tax Impact Comparison</h2>
+                <p class="text-sm text-gray-400 mb-4">Visual comparison of Old Tax vs. New Tax (in Rupees/Thousands) across all products in this sector. 
+                    <span class="text-cyan-400 font-semibold">Click any product tile on the left to open the detailed analysis slide.</span></p>
+                
+                <div class="chart-container-flex">
+                     <canvas id="sectorBarChart"></canvas>
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- MODAL POPUP (Product Detail) - New Slide Implementation -->
+    <!-- ========================================================================= -->
+    <div id="detail-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-gray-900 bg-opacity-75 flex items-center justify-center p-4" onclick="closeModal()">
+        <div id="modal-content-container" class="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg md:max-w-3xl lg:max-w-4xl max-h-[90vh] overflow-y-auto transform p-6" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-start border-b border-gray-700 pb-3 mb-4">
+                <h3 class="text-3xl font-extrabold text-cyan-400 title-glow" id="modal-product-name"></h3>
+                <button type="button" class="text-gray-400 hover:text-gray-200 transition" onclick="closeModal()">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- Modal Content Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                
+                <!-- Col 1-3: Description, Trend, Tax Comparison -->
+                <div class="lg:col-span-3 space-y-4">
+                    <div class="bg-slate-700 p-4 rounded-lg border border-cyan-600/30">
+                        <h4 class="text-lg font-bold text-cyan-300 border-b border-cyan-500/50 pb-1">Detailed Product Description</h4>
+                        <p class="text-sm text-gray-300 mt-2" id="modal-description"></p>
+                    </div>
+
+                    <div class="bg-slate-700 p-4 rounded-lg border border-cyan-600/30">
+                        <h4 class="text-lg font-bold text-cyan-300 border-b border-cyan-500/50 pb-1">Market & Consumption Trend Analysis</h4>
+                        <p class="text-sm text-gray-300 mt-2" id="modal-trend"></p>
+                    </div>
+
+                    <div class="bg-slate-700 p-4 rounded-lg border border-cyan-600/30">
+                        <h4 class="text-lg font-bold text-cyan-300 border-b border-cyan-500/50 pb-1">Tax Comparison (Old vs. New)</h4>
+                        <div class="flex justify-around items-center text-center mt-3">
+                            <!-- Old Tax -->
+                            <div>
+                                <p class="text-xs text-gray-400">Old Tax/Unit</p>
+                                <p class="text-2xl font-extrabold text-yellow-400" id="modal-old-tax"></p>
+                            </div>
+                            <!-- Dynamic Arrow/Symbol -->
+                            <div id="modal-tax-delta-symbol" class="text-4xl font-bold transition duration-300">→</div>
+                            <!-- New Tax (Flash Highlight Applied) -->
+                            <div>
+                                <p class="text-xs text-gray-400">New Tax/Unit</p>
+                                <p class="text-2xl font-extrabold text-red-500 flash-new-tax" id="modal-new-tax"></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- New: Price Distribution Summary in the Modal -->
+                    <div class="bg-slate-700 p-4 rounded-lg border border-cyan-600/30">
+                        <h4 class="text-lg font-bold text-cyan-300 border-b border-cyan-500/50 pb-1">Price Component Breakdown</h4>
+                        <div id="modal-price-distribution" class="grid grid-cols-3 gap-3 mt-3">
+                            <!-- Injected by showProductModal -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Col 4-5: Financial Breakdown Pie Chart (Visual) -->
+                <div class="lg:col-span-2 bg-slate-700 p-4 rounded-lg border border-cyan-600/30">
+                    <h4 class="text-lg font-bold text-cyan-300 mb-3 text-center">Price Financial Breakdown (New Tax)</h4>
+                    <div class="chart-container h-64 md:h-72">
+                        <canvas id="modalPieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <button type="button" class="px-6 py-2 bg-cyan-600 text-white font-semibold rounded-xl hover:bg-cyan-700 transition" onclick="closeModal()">
+                    Close Analysis
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- END Modal Popup Structure -->
+
+    <script>
+        // =========================================================================
+        // 1. GLOBAL DATA & STATE
+        // =========================================================================
+
+        const masterData = {
+            'Overview': {
+                description: "This dashboard provides a comprehensive analysis of the tax impact across five key sectors—Education, Health, Sin Goods, and Automobile Tax—comparing old tax structures with new/simulated regimes. Use the tabs above to explore detailed product-level unit economics and market trends.",
+                trends: {
+                    labels: ['2021', '2022', '2023', '2024', '2025'],
+                    datasets: [
+                        { label: 'Automobile Tax (k Lakhs)', data: [15, 17, 19, 23, 27], color: '#3B82F6' },
+                        { label: 'Sin Goods (k Lakhs)', data: [12, 14, 16, 19, 22], color: '#EF4444' },
+                        { label: 'Education (k Lakhs)', data: [4, 5, 6.5, 8, 10], color: '#06B6D4' },
+                        { label: 'Health (k Lakhs)', data: [4, 4.5, 5, 5.5, 6], color: '#10B981' },
+                    ]
+                }
+            },
+            'Education': {
+                name: 'Education',
+                summary: "The Education sector focuses on fundamental learning, with core services being tax-exempt. However, the rapidly growing private coaching and e-learning segments face standard tax rates (18%), driving up costs for specialized knowledge acquisition.",
+                motto: "Knowledge is the highest dividend. We track the cost of enlightenment.", // CREATIVE MOTTO
+                unit_type: '₹ (Actual)',
+                data: [
+                    { Product: 'Core School Fees (K-12)', Segment: 'Education Services', Cost: 50000, Profit: 10000, NewTax: 0, OldTax: 0, Sales: 100, Description: "Basic K-12 schooling fees remain exempt from GST, aiming to keep foundational education accessible to all demographics.", Trend: "Stable consumption; tax impact is neutral due to 0% rate." },
+                    { Product: 'Private Coaching/Tuition', Segment: 'Education Services', Cost: 25000, Profit: 15000, NewTax: 7200, OldTax: 6000, Sales: 25, Description: "Private coaching services face an increased tax burden (simulated 15% -> 18%), leading to higher prices for specialized test prep and supplementary learning.", Trend: "Growing market, but minor price elasticity observed due to tax hike." },
+                    { Product: 'Laptops for Students', Segment: 'Education Goods', Cost: 35000, Profit: 5000, NewTax: 7200, OldTax: 6500, Sales: 15, Description: "Laptops, essential for modern education, are taxed at the general 18% rate, a marginal increase from the old structure.", Trend: "High growth, price sensitive. Tax rate stabilization helps long-term planning." },
+                    { Product: 'E-learning Subscriptions', Segment: 'Education Services', Cost: 8000, Profit: 3000, NewTax: 2000, OldTax: 1500, Sales: 30, Description: "Online learning platforms attract 18% GST. The growth of this segment makes it a significant revenue source despite the steady tax rate.", Trend: "Rapid, resilient growth post-pandemic. High tax adherence." },
+                    { Product: 'School Uniforms', Segment: 'Education Goods', Cost: 1500, Profit: 300, NewTax: 90, OldTax: 75, Sales: 50, Description: "School uniforms often fall under reduced tax slabs (5-12%), intended to keep essential items affordable for families.", Trend: "Steady demand, low tax elasticity. Tax rate is a minor factor." },
+                    { Product: 'Printed Textbooks', Segment: 'Education Goods', Cost: 400, Profit: 50, NewTax: 0, OldTax: 0, Sales: 200, Description: "Printed books and study materials are generally exempt from GST, promoting literacy and educational access.", Trend: "Stable consumption; highly tax neutral." },
+                    { Product: 'Hostel Fees (Annual)', Segment: 'Education Services', Cost: 80000, Profit: 15000, NewTax: 18000, OldTax: 18000, Sales: 5, Description: "Hostel accommodation provided by educational institutions (above a threshold) may attract GST, impacting students living away from home.", Trend: "Inelastic demand; tax is a significant cost component for non-exempt fees." }
+                ]
+            },
+            'Health': {
+                name: 'Health',
+                summary: "The Health sector benefits from favorable tax policies, with essential medicines and certain medical devices taxed at a low 5% rate or exempted. This focus on accessibility minimizes the financial burden on patients for critical needs.",
+                motto: "The wellness of the nation, reflected in every tax adjustment.", // CREATIVE MOTTO
+                unit_type: '₹ (Actual)',
+                data: [
+                    { Product: 'Paracetamol Tablets', Segment: 'Healthcare Medicine', Cost: 30, Profit: 7, NewTax: 2.625, OldTax: 3.5, Sales: 500, Description: "Essential medicines like Paracetamol see a significant tax reduction (12% -> 5%), making basic healthcare more affordable for the general public.", Trend: "Steady, high volume consumption; tax decrease aims to reduce cost of essential drugs." },
+                    { Product: 'Diabetic Testing Kits', Segment: 'Healthcare Devices', Cost: 900, Profit: 270, NewTax: 75, OldTax: 90, Sales: 10, Description: "Medical devices used for chronic conditions, like testing kits, benefit from the reduced 5% rate, easing the financial burden on patients.", Trend: "Steady market, driven by chronic illness rates. Favorable tax supports accessibility." },
+                    { Product: 'Diagnostic services', Segment: 'Healthcare Services', Cost: 1200, Profit: 360, NewTax: 360, OldTax: 360, Sales: 5, Description: "High-end diagnostic services (like advanced scans) generally remain taxed at the standard 18% rate, targeting higher-income consumers.", Trend: "Stable high-end service market. Tax rate is constant." },
+                    { Product: 'Surgical Gloves (Box)', Segment: 'Healthcare Supplies', Cost: 100, Profit: 20, NewTax: 6, OldTax: 12, Sales: 10, Description: "Basic medical supplies also benefit from tax cuts, generally falling under the essential goods bracket for the health industry.", Trend: "Stable business demand; low tax ensures supply chain efficiency." },
+                    { Product: 'Specialized MRI Scan', Segment: 'Healthcare Services', Cost: 15000, Profit: 3000, NewTax: 3240, OldTax: 2700, Sales: 2, Description: "Specialized, non-essential medical services are often taxed at 18%, resulting in significant government revenue from high-cost procedures.", Trend: "High cost, inelastic demand. Tax change (simulated) drives up patient cost." },
+                    { Product: 'Ambulance Services', Segment: 'Healthcare Services', Cost: 5000, Profit: 1000, NewTax: 0, OldTax: 0, Sales: 8, Description: "Emergency and essential healthcare services, including ambulance transport, are typically exempt from tax to ensure accessibility during crises.", Trend: "Inelastic demand; tax neutral." },
+                    { Product: 'High-End Ventilator', Segment: 'Healthcare Devices', Cost: 50000, Profit: 10000, NewTax: 3000, OldTax: 6000, Sales: 1, Description: "Critical, life-saving medical equipment sees a major tax reduction (simulated 12% -> 5%), minimizing hospital procurement costs.", Trend: "Low volume, high value. Tax cuts reduce financial barrier for hospitals." }
+                ]
+            },
+            'Sin Goods': {
+                name: 'Sin Goods',
+                summary: "Sin Goods—primarily alcohol and tobacco—are subjected to extremely high tax rates (GST + Cess) aimed at discouraging consumption and raising substantial revenue for the government. The high taxation is a core strategy for public health management and treasury funding.",
+                motto: "Taxation for deterrence. Analyzing revenue from consumption control.", // CREATIVE MOTTO
+                unit_type: '₹ (Actual)',
+                data: [
+                    { Product: 'Whisky (750ml)', Segment: 'Alcohol (Hard Liquor)', Cost: 300, Profit: 20, NewTax: 90, OldTax: 72, Sales: 12, Description: "Premium hard liquor sees the highest tax component, reflecting both the sin tax and state excise duties. The aim is revenue maximization and consumption control.", Trend: "Consistent demand regardless of high price; tax elasticity is low, favoring government revenue." },
+                    { Product: 'Cigarettes (10 packs)', Segment: 'Tobacco (High-End)', Cost: 7.6, Profit: 1.2, NewTax: 2.8, OldTax: 2.24, Sales: 170, Description: "Cigarettes face a tiered tax structure (GST + NCCD + Cess). The high tax makes up a large portion of the retail price to deter smoking.", Trend: "Volume consumption is declining slowly; tax hikes are frequent revenue boosters." },
+                    { Product: 'Beer (500ml)', Segment: 'Alcohol (Mild)', Cost: 6, Profit: 1.5, NewTax: 6, OldTax: 4.8, Sales: 160, Description: "Lighter alcoholic beverages have a substantial tax, though often lower than hard liquor, allowing for broader consumer access while still generating significant government funds.", Trend: "High seasonal demand; tax increases can impact lower-income consumers more." },
+                    { Product: 'Aerated Drink (330ml)', Segment: 'Sugary Drink', Cost: 4, Profit: 2, NewTax: 1.2, OldTax: 0.96, Sales: 42, Description: "Sugary drinks are levied with a high GST rate plus compensation cess to address public health concerns related to sugar intake.", Trend: "Steady year-round consumption; health awareness campaigns and taxes dampen growth." },
+                    { Product: 'Premium Scotch (1L)', Segment: 'Alcohol (Hard Liquor)', Cost: 4000, Profit: 500, NewTax: 1500, OldTax: 1200, Sales: 5, Description: "Ultra-premium spirits have higher base prices, leading to massive per-unit tax revenue even if consumption volume is low.", Trend: "Luxury segment demand is inelastic, ensuring high tax yield." },
+                    { Product: 'Zarda/Chewing Tobacco', Segment: 'Tobacco (Chewable)', Cost: 2, Profit: 0.5, NewTax: 1.5, OldTax: 1.2, Sales: 300, Description: "Chewable tobacco often faces specific, extremely high tax rates (GST plus Cess based on value and weight) to discourage widespread usage.", Trend: "High volume among specific consumer groups; tax is aimed at public health deterrent." },
+                    { Product: 'Imported Cigar (Unit)', Segment: 'Tobacco (Luxury)', Cost: 100, Profit: 20, NewTax: 50, OldTax: 40, Sales: 10, Description: "Imported luxury goods face heavy import duties and GST, making them prohibitively expensive. This acts as a protective tariff and a revenue generator.", Trend: "Niche market, high profit, and high tax component per unit." }
+                ]
+            },
+            'Automobile Tax': {
+                name: 'Automobile Tax',
+                summary: "The Automobile sector is critical for the economy, subject to GST (28%) plus Cess (0% to 22%) based on engine capacity, length, and fuel type. This differential tax structure encourages smaller, fuel-efficient vehicles and discourages large, polluting luxury models.",
+                motto: "Driving progress: where luxury meets responsibility in tax.", // CREATIVE MOTTO
+                unit_type: '₹ \'000s (Thousands)',
+                data: [
+                    { Product: 'Automobile XUV400', Segment: 'SUV/Crossover', Cost: 5000, Profit: 500, NewTax: 500, OldTax: 350, Sales: 5, Description: "A mid-range SUV/Crossover attracting standard GST (28%) plus a moderate compensation cess. The tax structure favors SUVs slightly less than smaller cars.", Trend: "The fastest-growing segment in the market; tax structure does not significantly deter purchase." },
+                    { Product: 'Automobile Sedan', Segment: 'Sedan', Cost: 12000, Profit: 1000, NewTax: 1000, OldTax: 800, Sales: 12, Description: "A popular sedan segment, subject to the base 28% GST and a lower cess than luxury vehicles, making it a tax-efficient choice for families.", Trend: "Stable urban demand; competition is fierce, making pricing and tax crucial." },
+                    { Product: 'Electric Scooter/Bike', Segment: 'Two-Wheeler (EV)', Cost: 500, Profit: 100, NewTax: 50, OldTax: 40, Sales: 15, Description: "Electric vehicles (EVs) enjoy significantly lower GST (5%) as a key policy tool to promote sustainable transportation and reduce carbon emissions.", Trend: "Exponential growth due to government subsidies and tax cuts. Very high price elasticity." },
+                    { Product: 'Automobile Luxury SUV', Segment: 'Luxury', Cost: 50000, Profit: 4000, NewTax: 5000, OldTax: 4000, Sales: 4, Description: "High-end luxury vehicles face the maximum tax slab (28% GST + 22% Cess), totaling 50% effective tax, as a means of taxing affluence.", Trend: "Niche market, but high taxes ensure large per-unit revenue generation for the government." },
+                    { Product: 'Entry Level Hatchback', Segment: 'Hatchback', Cost: 4000, Profit: 500, NewTax: 150, OldTax: 100, Sales: 30, Description: "Small cars (under 4m, specific engine size) receive the lowest tax burden (28% + 1% cess), encouraging mass adoption of personal transport.", Trend: "High volume, steady market. Tax structure is highly favorable for buyers." },
+                    { Product: 'Heavy Commercial Truck', Segment: 'Commercial', Cost: 20000, Profit: 3000, NewTax: 2000, OldTax: 1800, Sales: 10, Description: "Commercial vehicles attract 28% GST, with moderate cess. The tax revenue from this segment is vital for infrastructure projects.", Trend: "Demand tied to industrial growth; tax rates are stable but high." },
+                    { Product: 'Luxury Sports Bike', Segment: 'Two-Wheeler (Luxury)', Cost: 1000, Profit: 200, NewTax: 300, OldTax: 250, Sales: 15, Description: "High-end motorcycles face higher tax brackets (28% GST + cess) similar to cars, reflecting their luxury status.", Trend: "Growing segment among enthusiasts; high taxes contribute substantially to per-unit government earnings." }
+                ]
+            }
+        };
+
+        let currentSector = 'Overview';
+        let overviewChartInstance = null;
+        let sectorBarChartInstance = null; // New chart instance for sector trends
+        let modalPieChartInstance = null;
+
+        const sectorNames = ['Overview', 'Education', 'Health', 'Sin Goods', 'Automobile Tax'];
+
+        // =========================================================================
+        // 2. UTILITY FUNCTIONS
+        // =========================================================================
+
+        /**
+         * Formats a number into Indian Rupee format, handling large scales (Thousands, Lakhs).
+         * @param {number} value - The number to format.
+         * @param {string} unitType - The scaling context ('₹ (Actual)' or '₹ '000s (Thousands)').
+         * @returns {string} - Formatted currency string.
+         */
+        const formatRupee = (value, unitType) => {
+            const sign = value < 0 ? '-' : '';
+            const absValue = Math.abs(value);
+            
+            const formatter = new Intl.NumberFormat('en-IN', {
+                maximumFractionDigits: (unitType.includes('Thousands') || absValue < 1) ? 0 : 2,
+                minimumFractionDigits: (unitType.includes('Thousands') || absValue < 1) ? 0 : 2
+            });
+            
+            let formattedValue = formatter.format(absValue);
+            let suffix = '';
+
+            if (unitType.includes('Thousands') && absValue >= 1000) {
+                formattedValue = formatter.format(absValue / 1000);
+                suffix = ' M k'; // Million thousands, used for large vehicle prices
+            } else if (unitType.includes('Thousands')) {
+                 suffix = ' k';
+            } else if (absValue >= 10000000) { // Crore
+                formattedValue = formatter.format(absValue / 10000000);
+                suffix = ' Cr';
+            } else if (absValue >= 100000) { // Lakh
+                formattedValue = formatter.format(absValue / 100000);
+                suffix = ' L';
+            }
+            
+            return `${sign}₹ ${formattedValue}${suffix}`;
+        };
+
+        /**
+         * Calculates derived metrics for a single product.
+         * Note: Sales are assumed to be in '000s for most sectors (k).
+         */
+        const calculateProductMetrics = (product, unitType) => {
+            // Price = Cost + Profit + New Tax
+            const sellingPrice = product.Cost + product.Profit + product.NewTax;
+            
+            // Total Gov Earning (New Tax): New Tax per Unit * Sales Quantity ('000s)
+            // Sales is always in '000s (k) for Total Earning calculation
+            const totalNewTaxK = product.NewTax * product.Sales;
+            const totalOldTaxK = product.OldTax * product.Sales;
+
+            return {
+                ...product,
+                SellingPrice: sellingPrice,
+                TotalNewTaxK: totalNewTaxK,
+                TotalOldTaxK: totalOldTaxK,
+                DeltaTax: product.NewTax - product.OldTax,
+                DeltaTaxK: totalNewTaxK - totalOldTaxK,
+                UnitType: unitType,
+            };
+        };
+
+
+        // =========================================================================
+        // 3. CORE UI & NAVIGATION LOGIC
+        // =========================================================================
+
+        /**
+         * Initializes navigation tabs and sets up the event listeners.
+         */
+        const initNavigation = () => {
+            const navContainer = document.getElementById('main-nav');
+            navContainer.innerHTML = '';
+            
+            sectorNames.forEach(sector => {
+                const btn = document.createElement('button');
+                const isActive = sector === currentSector;
+                btn.id = `nav-${sector.replace(/ /g, '-')}`;
+                btn.textContent = sector;
+                // Updated class for Teal/Cyan theme
+                btn.className = `px-4 py-2 rounded-lg font-semibold transition duration-300 ease-in-out ${
+                    isActive ? 'bg-cyan-600 text-white shadow-lg' : 'bg-slate-700 text-gray-300 hover:bg-cyan-500 hover:text-white'
+                }`;
+                btn.onclick = () => switchSector(sector);
+                navContainer.appendChild(btn);
+            });
+        };
+
+        /**
+         * Switches the active sector view.
+         * @param {string} newSector - The name of the sector to switch to.
+         */
+        const switchSector = (newSector) => {
+            if (currentSector === newSector) return;
+
+            const oldPanel = document.getElementById(currentSector === 'Overview' ? 'Overview' : 'SectoralDetail');
+            const newPanel = document.getElementById(newSector === 'Overview' ? 'Overview' : 'SectoralDetail');
+
+            // 1. Apply fade/slide out animation to old content
+            if (oldPanel) {
+                oldPanel.classList.remove('active');
+                oldPanel.style.transform = 'translateY(10px)';
+                oldPanel.style.opacity = '0';
+            }
+            
+            // 2. Update navigation styles (using new colors)
+            document.getElementById(`nav-${currentSector.replace(/ /g, '-')}`).classList.replace('bg-cyan-600', 'bg-slate-700');
+            document.getElementById(`nav-${currentSector.replace(/ /g, '-')}`).classList.remove('text-white', 'shadow-lg');
+            document.getElementById(`nav-${newSector.replace(/ /g, '-')}`).classList.replace('bg-slate-700', 'bg-cyan-600');
+            document.getElementById(`nav-${newSector.replace(/ /g, '-')}`).classList.add('text-white', 'shadow-lg');
+
+            currentSector = newSector;
+            
+            // 3. Delay content update and animation for smooth transition
+            setTimeout(() => {
+                // Rerender the content of the new panel
+                if (newSector === 'Overview') {
+                    renderOverview();
+                } else {
+                    renderSectorDetails(newSector);
+                }
+
+                // 4. Update panel visibility and apply fade/slide in animation
+                document.querySelectorAll('.dashboard-content-panel').forEach(panel => {
+                    panel.classList.remove('active');
+                    panel.style.display = 'none';
+                });
+
+                if (newPanel) {
+                    newPanel.style.display = 'block';
+                    // Force repaint before adding 'active' class
+                    void newPanel.offsetWidth; 
+                    newPanel.classList.add('active');
+                    newPanel.style.transform = 'translateY(0)';
+                    newPanel.style.opacity = '1';
+                }
+
+            }, 400); // Wait for fade-out duration
+        };
+
+        // =========================================================================
+        // 4. OVERVIEW RENDERING
+        // =========================================================================
+
+        /**
+         * Renders the Overview tab content.
+         */
+        const renderOverview = () => {
+            const overviewData = masterData.Overview;
+            
+            document.getElementById('overview-description').textContent = overviewData.description;
+            // Updated summary IDs
+            document.getElementById('summary-education').textContent = masterData['Education'].summary;
+            document.getElementById('summary-health').textContent = masterData['Health'].summary;
+            document.getElementById('summary-sin-goods').textContent = masterData['Sin Goods'].summary;
+            document.getElementById('summary-automobile-tax').textContent = masterData['Automobile Tax'].summary;
+
+            renderOverviewChart(overviewData.trends);
+            renderNumericTrends(overviewData.trends);
+        };
+
+        /**
+         * Renders the Line Chart for the Overview section.
+         * @param {object} trendData - Data object containing labels and datasets.
+         */
+        const renderOverviewChart = (trendData) => {
+            if (overviewChartInstance) overviewChartInstance.destroy();
+
+            const datasets = trendData.datasets.map(d => ({
+                label: d.label,
+                data: d.data,
+                // Using the updated colors from masterData
+                borderColor: d.color,
+                backgroundColor: d.color + '40', 
+                tension: 0.4,
+                fill: true,
+                pointRadius: 5,
+                pointHoverRadius: 8
+            }));
+
+            const config = {
+                type: 'line',
+                data: {
+                    labels: trendData.labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: '#d1d5db'
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Hypothetical Government Revenue Trends by Sector',
+                            color: '#e5e7eb',
+                            font: { size: 16, weight: 'bold' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#9ca3af' },
+                            grid: { color: '#374151' },
+                            title: { display: true, text: 'Year', color: '#9ca3af' }
+                        },
+                        y: {
+                            ticks: { color: '#9ca3af' },
+                            grid: { color: '#374151' },
+                            title: { display: true, text: 'Revenue (k Lakhs)', color: '#9ca3af' }
+                        }
+                    }
+                }
+            };
+            
+            const ctx = document.getElementById('overviewLineChart').getContext('2d');
+            overviewChartInstance = new Chart(ctx, config);
+        };
+        
+        /**
+         * Renders the numerical list of trend data.
+         */
+        const renderNumericTrends = (trendData) => {
+            const listContainer = document.getElementById('numeric-trends');
+            listContainer.innerHTML = '';
+            
+            trendData.datasets.forEach(d => {
+                const totalChange = d.data[d.data.length - 1] - d.data[0];
+                const item = document.createElement('li');
+                item.className = 'p-3 rounded-lg border-l-4'
+                item.style.borderColor = d.color;
+                item.innerHTML = `
+                    <p class="text-lg font-bold" style="color: ${d.color};">${d.label}</p>
+                    <p class="text-sm text-gray-400">Start (2021): <span class="font-medium text-white">${d.data[0]} k Lakhs</span></p>
+                    <p class="text-sm text-gray-400">Projection (2025): <span class="font-medium text-white">${d.data[d.data.length - 1]} k Lakhs</span></p>
+                    <p class="text-sm text-gray-400">Total Change: <span class="font-bold text-${totalChange >= 0 ? 'teal-400' : 'red-400'}">${totalChange >= 0 ? '+' : ''}${totalChange.toFixed(1)} k Lakhs</span></p>
+                `;
+                listContainer.appendChild(item);
+            });
+        }
+
+
+        // =========================================================================
+        // 5. SECTOR DETAILS RENDERING
+        // =========================================================================
+
+        /**
+         * Renders the Product Selection list and sets up the placeholder.
+         * @param {string} sectorName - The name of the active sector.
+         */
+        const renderSectorDetails = (sectorName) => {
+            const sector = masterData[sectorName];
+            const productListDiv = document.getElementById('product-list-container');
+            
+            // --- New: Set Sector Motto ---
+            document.getElementById('sector-motto').textContent = sector.motto;
+
+            document.getElementById('sector-title-selection').textContent = `${sectorName} Products`;
+            
+            productListDiv.innerHTML = ''; 
+
+            // Render Product Tiles
+            sector.data.forEach((product) => {
+                const calculatedProduct = calculateProductMetrics(product, sector.unit_type);
+                const tile = document.createElement('div');
+                // Updated product tile background for the new theme
+                tile.className = `product-tile p-3 rounded-xl bg-slate-700 text-white shadow-md hover:border-cyan-300`;
+                tile.innerHTML = `
+                    <p class="text-sm font-semibold text-white">${product.Product}</p>
+                    <p class="text-xs text-cyan-300">${product.Segment}</p>
+                `;
+                
+                // Clicking the tile directly opens the full analysis modal (the "new slide")
+                tile.onclick = () => {
+                    // Update selection state
+                    document.querySelectorAll('#product-list-container .product-tile').forEach(t => t.classList.remove('selected'));
+                    tile.classList.add('selected');
+                    
+                    // Show the full analysis modal/slide
+                    showProductModal(masterData[sectorName], calculatedProduct);
+                };
+
+                productListDiv.appendChild(tile);
+            });
+
+            // Render the Tax Trend Analysis Chart for the entire sector
+            renderSectorBarChart(sector);
+        };
+        
+        /**
+         * Renders the Tax Impact Comparison Bar Chart for the current sector.
+         * @param {object} sector - The current sector data object.
+         */
+        const renderSectorBarChart = (sector) => {
+            if (sectorBarChartInstance) sectorBarChartInstance.destroy();
+
+            const products = sector.data.map(p => calculateProductMetrics(p, sector.unit_type));
+            const labels = products.map(p => p.Product);
+            const oldTaxData = products.map(p => p.OldTax);
+            const newTaxData = products.map(p => p.NewTax);
+
+            const config = {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        // Updated chart colors
+                        { label: 'Old Tax/Unit', data: oldTaxData, backgroundColor: '#FCD34D' }, // Amber (Old)
+                        { label: 'New Tax/Unit', data: newTaxData, backgroundColor: '#06B6D4' }  // Cyan (New)
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y', // Make it a horizontal bar chart for better label reading
+                    plugins: {
+                        legend: { labels: { color: '#d1d5db' } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${formatRupee(context.parsed.x, sector.unit_type)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#9ca3af' },
+                            grid: { color: '#374151' },
+                            title: { display: true, text: `Tax Amount (${sector.unit_type})`, color: '#9ca3af' }
+                        },
+                        y: {
+                            ticks: { color: '#9ca3af' },
+                            grid: { color: '#374151' }
+                        }
+                    }
+                }
+            };
+            
+            const ctx = document.getElementById('sectorBarChart').getContext('2d');
+            sectorBarChartInstance = new Chart(ctx, config);
+        }
+        
+        // Removed selectProduct and displayInlineProductDetails as they are now consolidated into the tile.onclick handler
+
+        // =========================================================================
+        // 6. MODAL (PRODUCT ANALYSIS) LOGIC
+        // =========================================================================
+        
+        /**
+         * Shows the modal with the in-depth analysis for a selected product.
+         */
+        const showProductModal = (sector, product) => {
+            // Set Titles and static content
+            document.getElementById('modal-product-name').textContent = `${product.Product} (${product.Segment})`;
+            document.getElementById('modal-description').textContent = product.Description;
+            document.getElementById('modal-trend').textContent = product.Trend;
+
+            const unitType = sector.unit_type; 
+            const totalPrice = product.SellingPrice;
+
+            // Determine tax delta visual
+            const deltaTax = product.NewTax - product.OldTax;
+            const symbolElement = document.getElementById('modal-tax-delta-symbol');
+            
+            if (deltaTax > 0) {
+                symbolElement.innerHTML = '&#9650;'; // Up arrow
+                symbolElement.classList.remove('text-cyan-500');
+                symbolElement.classList.add('text-red-500', 'flash-new-tax'); // Red + Flash for increase
+            } else if (deltaTax < 0) {
+                symbolElement.innerHTML = '&#9660;'; // Down arrow
+                symbolElement.classList.remove('text-cyan-500', 'flash-new-tax');
+                symbolElement.classList.add('text-teal-400'); // Teal for decrease/saving
+            } else {
+                symbolElement.innerHTML = '&#8594;'; // Right arrow
+                symbolElement.classList.remove('text-red-500', 'text-teal-400', 'flash-new-tax');
+                symbolElement.classList.add('text-cyan-500');
+            }
+            
+            // Tax Comparison
+            document.getElementById('modal-old-tax').textContent = formatRupee(product.OldTax, unitType);
+            document.getElementById('modal-new-tax').textContent = formatRupee(product.NewTax, unitType);
+
+            // Calculate percentages for the detailed summary
+            const costPct = ((product.Cost / totalPrice) * 100).toFixed(1);
+            const profitPct = ((product.Profit / totalPrice) * 100).toFixed(1);
+            const taxPct = ((product.NewTax / totalPrice) * 100).toFixed(1);
+
+            // Generate Price Distribution Blocks
+            const distributionArea = document.getElementById('modal-price-distribution');
+            distributionArea.innerHTML = `
+                <div class="p-2 rounded-lg border-l-4 border-blue-500 bg-slate-700/50">
+                    <p class="text-sm text-gray-400">Cost (${costPct}%)</p>
+                    <p class="text-lg font-bold text-white">${formatRupee(product.Cost, unitType)}</p>
+                </div>
+                <div class="p-2 rounded-lg border-l-4 border-teal-500 bg-slate-700/50">
+                    <p class="text-sm text-gray-400">Profit (${profitPct}%)</p>
+                    <p class="text-lg font-bold text-teal-400">${formatRupee(product.Profit, unitType)}</p>
+                </div>
+                <div class="p-2 rounded-lg border-l-4 border-red-500 bg-slate-700/50">
+                    <p class="text-sm text-gray-400">Govt. Earning (${taxPct}%)</p>
+                    <p class="text-lg font-bold text-red-400">${formatRupee(product.NewTax, unitType)}</p>
+                </div>
+            `;
+
+
+            // Financial Breakdown Pie Chart (Visual)
+            renderModalPieChart(product, unitType);
+            
+            // Apply animation and show modal
+            const modalContent = document.getElementById('modal-content-container');
+            modalContent.classList.add('modal-animate');
+            document.getElementById('detail-modal').classList.remove('hidden');
+        };
+
+        /**
+         * Renders the Financial Breakdown Pie Chart for the selected product.
+         */
+        const renderModalPieChart = (product, unitType) => {
+            if (modalPieChartInstance) modalPieChartInstance.destroy();
+
+            // Total Price: Cost + Profit + New Tax
+            const data = [
+                product.Cost,
+                product.Profit,
+                product.NewTax
+            ];
+            
+            const labels = [
+                `Manufacturing Cost: ${formatRupee(product.Cost, unitType)}`,
+                `Profit Margins: ${formatRupee(product.Profit, unitType)}`,
+                `Government Earnings (New Tax): ${formatRupee(product.NewTax, unitType)}`
+            ];
+
+            const config = {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Price Components',
+                        data: data,
+                        // --- CREATIVE ENHANCEMENT 2: Chart Gradient/Color ---
+                        backgroundColor: ['#3B82F6', '#10B981', '#EF4444'], // Blue, Teal, Red
+                        hoverOffset: 16,
+                        borderWidth: 0 // Remove white border for modern look
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            position: 'bottom',
+                            labels: { color: '#d1d5db' }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                    let value = context.parsed;
+                                    let percentage = ((value / total) * 100).toFixed(1);
+                                    return `${context.label} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+            
+            const ctx = document.getElementById('modalPieChart').getContext('2d');
+            modalPieChartInstance = new Chart(ctx, config);
+        };
+
+
+        /**
+         * Closes the modal popup.
+         */
+        const closeModal = () => {
+             const modalContent = document.getElementById('modal-content-container');
+            // Remove animation class for next reveal
+            modalContent.classList.remove('modal-animate'); 
+            document.getElementById('detail-modal').classList.add('hidden');
+        };
+
+
+        // =========================================================================
+        // 7. INITIALIZATION
+        // =========================================================================
+
+        window.onload = function() {
+            // Set initial state
+            initNavigation();
+            // Render initial view (Overview is default active)
+            renderOverview();
+            
+            // Add global listener to close modal if background is clicked
+            document.getElementById('detail-modal').addEventListener('click', (e) => {
+                if (e.target.id === 'detail-modal') {
+                    closeModal();
+                }
+            });
+        };
+    </script>
+</body>
+</html>
